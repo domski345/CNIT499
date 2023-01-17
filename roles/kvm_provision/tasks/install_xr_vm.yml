@@ -1,0 +1,50 @@
+---
+# Role used to Provision new VMs 
+
+- name: Copy image to pool directory
+  ansible.builtin.copy:
+    dest: "{{ libvirt_pool_dir }}/{{ item }}.qcow2"
+    src: "{{ libvirt_base_dir }}/iosxrv-k9-demo-6.3.1.qcow2"
+    force: no
+    remote_src: yes 
+    mode: 0660
+
+# These next for plays should probably be with the group
+- name: Create temporary "CVAC" directory
+  ansible.builtin.file:
+    path: /tmp/{{ item }}
+    state: directory
+    mode: '0755'
+
+- name: Create XR template
+  ansible.builtin.template:
+    src: iosxr_config.txt.j2
+    dest: /tmp/{{ item }}/iosxr_config.txt
+
+- name: Create admin template
+  ansible.builtin.template:
+    src: iosxr_config_admin.txt.j2
+    dest: /tmp/{{ item }}/iosxr_config_admin.txt
+
+- name: Create "CVAC" file
+  community.general.iso_create:
+    src_files:
+      - /tmp/{{ item }}/iosxr_config.txt
+      - /tmp/{{ item }}/iosxr_config_admin.txt
+    dest_iso: "{{ libvirt_pool_dir }}/{{ item }}-conf.iso"
+    interchange_level: 2
+    vol_ident: config-1
+    # Thanks to https://plajjan.github.io/2016-05-19-bootstrapping-virtual-XR.html
+    # and https://www.cisco.com/c/en/us/td/docs/ios_xr_sw/ios_xrv/install_config/b-xrv/b-xrv_chapter_011.html
+
+- name: Remove the "CVAC" directory
+  ansible.builtin.file:
+    path: /tmp/{{ item }}
+    state: absent
+      
+- name: Define the IOSXRv VM
+  community.libvirt.virt:
+    command: define
+    # Ideally the lookup file would be defined as a groupvar.
+    xml: "{{ lookup('template', 'iosxr_vm.xml.j2') }}"
+

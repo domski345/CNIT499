@@ -1,0 +1,42 @@
+---
+# This playbook sets up KVM on the hypervisor, in this case Rocky 8.7 was used.
+- name: Install KVM (and enable cockpit) on Rocky Linux 
+  hosts: infra
+  gather_facts: yes
+  become: yes
+
+  tasks:
+    - name: Install KVM packages.
+      ansible.builtin.dnf:
+        name:
+          - qemu-kvm
+          - virt-manager
+          - libguestfs-tools
+          - virt-install
+          - genisoimage
+          - libguestfs-tools
+          # - python3           # This is only necessary for "pycdlib"
+          - python3-libvirt
+          - net-snmp
+          - cockpit-pcp
+          - cockpit-machines
+        state: latest
+
+    - name: Enable services
+      ansible.builtin.systemd:
+        name: "{{ item }}"
+        state: started
+        enabled: yes
+      loop:
+      - libvirtd
+      - pmlogger.service
+      - cockpit.socket
+
+    - name: Check performance profile
+      ansible.builtin.command: tuned-adm active
+      register: profile
+      changed_when: no
+
+    - name: Set performance profile
+      ansible.builtin.command: tuned-adm profile virtual-host
+      when: profile.stdout.find('virtual-host') == -1

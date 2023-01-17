@@ -1,0 +1,18 @@
+---
+# Role used to Provision new VMs 
+
+- name: Copy image to pool directory
+  ansible.builtin.copy:
+    dest: "{{ libvirt_pool_dir }}/{{ item }}.qcow2"
+    src: "{{ libvirt_base_dir }}/vios-adventerprisek9-m.spa.159-3.m3.qcow2"
+    force: no
+    remote_src: yes 
+    mode: 0660
+      
+- name: Define the IOSXRv VM
+  community.libvirt.virt:
+    command: define
+    # Ideally the lookup file would be defined as a groupvar
+    # xml: "{{ lookup('template', '{{ template_name }}') }}"
+    xml: "{{ lookup('template', 'ios_vm.xml.j2') }}"
+

@@ -1,0 +1,22 @@
+---
+# Role used to delete unused VMs 
+
+- name: Stop the VM
+  community.libvirt.virt:
+    name: "{{ item }}"
+    state: destroyed
+
+- name: Destroy the VM
+  community.libvirt.virt:
+    name: "{{ item }}"
+    command: undefine
+
+- name: Remove the boot disk
+  ansible.builtin.file:
+    path: "{{ libvirt_pool_dir }}/{{ item }}.qcow2"
+    state: absent
+
+- name: Remove the config disk
+  ansible.builtin.file:
+    path: "{{ libvirt_pool_dir }}/{{ item }}-conf.iso"
+    state: absent

@@ -1,0 +1,25 @@
+---
+# Create VMs according to inventory
+
+- name: Get VMs list
+  community.libvirt.virt:
+    command: list_vms
+  register: existing_vms
+  changed_when: no
+
+- name: iosxr vm provision role
+  ansible.builtin.include_tasks: install_xr_vm.yml
+  when: "item not in existing_vms.list_vms"
+  loop: "{{ groups['iosxr'] }}"
+  ignore_errors: true
+
+- name: ios vm provision role
+  ansible.builtin.include_tasks: install_ios_vm.yml
+  when: "item not in existing_vms.list_vms"
+  loop: "{{ groups['ios'] }}"
+  ignore_errors: true
+
+- name: VM delete role
+  ansible.builtin.include_tasks: delete_vm.yml
+  when: "item not in groups['vms']"
+  loop: "{{ existing_vms.list_vms }}"

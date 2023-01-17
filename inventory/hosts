@@ -1,0 +1,16 @@
+---
+all:
+  children:
+    infra:
+      hosts:
+        node-01.k8s.domski.tech:
+        # node-02.k8s.domski.tech:
+        # node-03.k8s.domski.tech:
+    vms:
+      children:
+        iosxr:
+          hosts:
+            iosxr-test-1:
+        # ios:
+        #   hosts:
+        #     ios-1:
