@@ -4,8 +4,16 @@
   hosts: infra
   gather_facts: yes
   become: yes
-
   tasks:
+
+    - name: Add docker repository
+      ansible.builtin.yum_repository:
+        name: docker-ce-stable
+        description: Docker CE Stable - $basearch
+        baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
+        gpgcheck: true
+        gpgkey: https://download.docker.com/linux/centos/gpg
+
     - name: Install KVM packages.
       ansible.builtin.dnf:
         name:
@@ -15,14 +23,19 @@
           - virt-install
           - genisoimage
           - libguestfs-tools
-          # - python3           # This is only necessary for "pycdlib"
+          - python3-pip           # This is only necessary for "pycdlib" and docker
           - python3-libvirt
           - net-snmp
           - cockpit-pcp
           - cockpit-machines
+          - docker-ce
+          - docker-ce-cli
+          - containerd.io 
+          - docker-compose-plugin
+          - git
         state: latest
 
-    - name: Enable services
+    - name: Enable and start services
       ansible.builtin.systemd:
         name: "{{ item }}"
         state: started
@@ -31,6 +44,7 @@
       - libvirtd
       - pmlogger.service
       - cockpit.socket
+      - docker
 
     - name: Check performance profile
       ansible.builtin.command: tuned-adm active
@@ -40,3 +54,42 @@
     - name: Set performance profile
       ansible.builtin.command: tuned-adm profile virtual-host
       when: profile.stdout.find('virtual-host') == -1
+
+    # The following plays are necessary to install netbox in docker 
+    - name: Add user to docker group
+      ansible.builtin.user:
+        name: "{{ ansible_user }}"
+        groups:
+          - docker
+          - wheel
+
+    - name: Create netbox-compose directory if it does not exist
+      ansible.builtin.file:
+        path: /opt/netbox-docker
+        state: directory
+        mode: '0755'
+    
+    - name: Clone the netbox repo
+      ansible.builtin.git:
+        repo: https://github.com/netbox-community/netbox-docker.git
+        dest: /opt/netbox-docker
+        version: release
+
+    - name: Create compose override file
+      ansible.builtin.copy:
+        dest: /opt/netbox-docker/docker-compose.override.yml
+        content: "version: '3.4'\nservices:\n  netbox:\n    ports:\n      - 8000:8080"
+
+    - name: Update pip
+      ansible.builtin.command: pip3 install --upgrade pip
+
+    - name: Install docker-py python package
+      ansible.builtin.pip:
+        name:
+          - setuptools-rust 
+          - docker
+          - docker-compose
+
+    - name: Create and start services
+      community.docker.docker_compose:
+        project_src: /opt/netbox-docker
