@@ -1,0 +1,13 @@
+---
+# tasks file for kvm_provision
+- name: Install various pre-requisites for oVirt
+  hosts: infra
+  gather_facts: yes
+  become: yes
+  tasks:
+  
+    - name: VM provision role
+      ansible.builtin.include_role:
+        name: gluster
+
+

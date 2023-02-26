@@ -2,15 +2,19 @@
 all:
   children:
     infra:
-      hosts:
-        node-01.k8s.domski.tech:
-        # node-02.k8s.domski.tech:
-        # node-03.k8s.domski.tech:
-    vms:
       children:
-        iosxr:
+        hdd:
           hosts:
-            iosxr-test-1:
-        # ios:
-        #   hosts:
-        #     ios-1:
+            viper.brownout.tech:
+            warlock.brownout.tech:
+            cougar.brownout.tech:
+            jester.brownout.tech:
+        nvme:
+          hosts:
+            sundown.brownout.tech:
+            slider.brownout.tech:
+            hollywood.brownout.tech:
+      # hosts:
+        
+  # hosts:
+  #   localhost ansible_connection=local
