@@ -6,33 +6,41 @@
   become: yes
   tasks:
 
-    - name: Add docker repository
-      ansible.builtin.yum_repository:
-        name: docker-ce-stable
-        description: Docker CE Stable - $basearch
-        baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
-        gpgcheck: true
-        gpgkey: https://download.docker.com/linux/centos/gpg
+    # - name: Add docker repository
+    #   ansible.builtin.yum_repository:
+    #     name: docker-ce-stable
+    #     description: Docker CE Stable - $basearch
+    #     baseurl: https://download.docker.com/linux/centos/$releasever/$basearch/stable
+    #     gpgcheck: true
+    #     gpgkey: https://download.docker.com/linux/centos/gpg
+
+    - name: Install Gluster fix.
+      ansible.builtin.dnf:
+        name: centos-release-gluster9
+        state: latest
 
     - name: Install KVM packages.
       ansible.builtin.dnf:
         name:
-          - qemu-kvm
-          - virt-manager
-          - libguestfs-tools
-          - virt-install
-          - genisoimage
-          - libguestfs-tools
-          - python3-pip           # This is only necessary for "pycdlib" and docker
-          - python3-libvirt
-          - net-snmp
-          - cockpit-pcp
-          - cockpit-machines
-          - docker-ce
-          - docker-ce-cli
-          - containerd.io 
-          - docker-compose-plugin
-          - git
+          - glusterfs
+          - glusterfs-libs
+          - glusterfs-server
+          # - qemu-kvm
+          # - virt-manager
+          # - libguestfs-tools
+          # - virt-install
+          # - genisoimage
+          # - libguestfs-tools
+          # - python3-pip           # This is only necessary for "pycdlib" and docker
+          # # - python3-libvirt
+          # # - net-snmp
+          # - cockpit-pcp
+          # # - cockpit-machines
+          # - docker-ce
+          # - docker-ce-cli
+          # - containerd.io 
+          # - docker-compose-plugin
+          # - git
         state: latest
 
     - name: Enable and start services
@@ -41,55 +49,75 @@
         state: started
         enabled: yes
       loop:
-      - libvirtd
-      - pmlogger.service
-      - cockpit.socket
-      - docker
+        - glusterfsd.service
+        - glusterd.service
+      # - libvirtd
+      # - pmlogger.service
+      # - cockpit.socket
+      # - docker
 
-    - name: Check performance profile
-      ansible.builtin.command: tuned-adm active
-      register: profile
-      changed_when: no
+    - name: Enable glusterfs through the firewall
+      ansible.posix.firewalld:
+        service: glusterfs
+        permanent: true
+        state: enabled
 
-    - name: Set performance profile
-      ansible.builtin.command: tuned-adm profile virtual-host
-      when: profile.stdout.find('virtual-host') == -1
+    # - name: Check performance profile
+    #   ansible.builtin.command: tuned-adm active
+    #   register: profile
+    #   changed_when: no
+
+    # - name: Set performance profile
+    #   ansible.builtin.command: tuned-adm profile virtual-host
+    #   when: profile.stdout.find('virtual-host') == -1
 
     # The following plays are necessary to install netbox in docker 
-    - name: Add user to docker group
-      ansible.builtin.user:
-        name: "{{ ansible_user }}"
-        groups:
-          - docker
-          - wheel
+    # - name: Add user to docker group
+    #   ansible.builtin.user:
+    #     name: "{{ ansible_user }}"
+    #     groups:
+    #       - docker
+    #       - wheel
 
-    - name: Create netbox-compose directory if it does not exist
-      ansible.builtin.file:
-        path: /opt/netbox-docker
-        state: directory
-        mode: '0755'
+    # - name: Create netbox-compose directory if it does not exist
+    #   ansible.builtin.file:
+    #     path: /opt/netbox-docker
+    #     state: directory
+    #     mode: '0755'
     
-    - name: Clone the netbox repo
-      ansible.builtin.git:
-        repo: https://github.com/netbox-community/netbox-docker.git
-        dest: /opt/netbox-docker
-        version: release
+    # - name: Clone the netbox repo
+    #   ansible.builtin.git:
+    #     repo: https://github.com/netbox-community/netbox-docker.git
+    #     dest: /opt/netbox-docker
+    #     version: release
 
-    - name: Create compose override file
-      ansible.builtin.copy:
-        dest: /opt/netbox-docker/docker-compose.override.yml
-        content: "version: '3.4'\nservices:\n  netbox:\n    ports:\n      - 8000:8080"
+    # - name: Create compose override file
+    #   ansible.builtin.copy:
+    #     dest: /opt/netbox-docker/docker-compose.override.yml
+    #     content: "version: '3.4'\nservices:\n  netbox:\n    ports:\n      - 8000:8080"
 
-    - name: Update pip
-      ansible.builtin.command: pip3 install --upgrade pip
+    # - name: Update pip
+    #   ansible.builtin.command: pip3 install --upgrade pip
 
-    - name: Install docker-py python package
-      ansible.builtin.pip:
-        name:
-          - setuptools-rust 
-          - docker
-          - docker-compose
+    # - name: Install docker-py python package
+    #   ansible.builtin.pip:
+    #     name:
+    #       - setuptools-rust 
+    #       - docker
+    #       - docker-compose
+    #       - pynetbox
 
-    - name: Create and start services
-      community.docker.docker_compose:
-        project_src: /opt/netbox-docker
+    # - name: Create and start services
+    #   community.docker.docker_compose:
+    #     project_src: /opt/netbox-docker
+    #   timeout: 300
+
+    # - name: Create a custom field on device and virtual machine
+    #   netbox.netbox.netbox_custom_field:
+    #     netbox_url: http://node-01.k8s.domski.tech:8000/
+    #     netbox_token: 0123456789abcdef0123456789abcdef01234567
+    #     data:
+    #       content_types:
+    #         - dcim.device-types
+    #       name: template_image
+    #       type: text
