@@ -1,4 +1,18 @@
 ---
+- name: Configure passwordless sudo
+  hosts: infra
+  gather_facts: yes
+  become: yes
+  tasks:
+  
+    - name: Configure passwordless sudo
+      ansible.builtin.lineinfile:
+        path: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel        ALL=(ALL)       NOPASSWD: ALL'
+        validate: /usr/sbin/visudo -cf %s
+
 - name: Configure Gluster on the HDD hosts
   hosts: hdd
   gather_facts: yes
