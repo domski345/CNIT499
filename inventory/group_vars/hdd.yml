@@ -1,0 +1,4 @@
+---
+gluster_brick_dir: 
+  - /data/volume1/brick1
+gluster_brick_name: gv1
