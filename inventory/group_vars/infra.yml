@@ -1,3 +1,0 @@
----
-ansible_user: drusso
-gluster_mount_dir: /data/gluster

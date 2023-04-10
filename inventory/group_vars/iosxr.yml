@@ -1,3 +1,0 @@
----
-base_image_name: iosxrv-k9-demo-6.3.1.qcow2
-template_name: 'iosxr_vm.xml.j2'

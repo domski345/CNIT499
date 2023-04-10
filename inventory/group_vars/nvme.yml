@@ -1,5 +1,0 @@
----
-gluster_brick_dir: 
-  - /data/volume1/brick1
-  - /data/volume2/brick2
-gluster_brick_name: gv0

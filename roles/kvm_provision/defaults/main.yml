@@ -1,6 +1,0 @@
----
-# defaults file for kvm_provision
-# base_image_name: iosxrv-k9-demo-6.3.1.qcow2
-libvirt_pool_dir: "/data/disks"
-libvirt_base_dir: "/data/images"
-# template_name: "iosxr_vm.xml.j2"
