@@ -1,8 +1,11 @@
 ---
 
-- name: Install Gluster fix.
+- name: Install Gluster fix(es).
   ansible.builtin.dnf:
-    name: centos-release-gluster9
+    # name: vdsm-gluster
+    name: 
+      - centos-release-gluster9
+      - centos-release-ovirt45
     state: latest
 
 - name: Install Gluster packages.
@@ -11,6 +14,7 @@
       - glusterfs
       - glusterfs-libs
       - glusterfs-server
+      - vdsm-gluster
     state: latest
 
 - name: Enable and start services

@@ -1,22 +1,36 @@
 ---
 # Role used to delete unused VMs 
 
-- name: Stop the VM
-  community.libvirt.virt:
-    name: "{{ item }}"
-    state: destroyed
+- name: show name
+  debug: msg="{{ item.value.name }}"
 
-- name: Destroy the VM
-  community.libvirt.virt:
-    name: "{{ item }}"
-    command: undefine
+# - name: Stop the VM
+#   community.libvirt.virt:
+#     name: "{{ item.value.name }}"
+#     state: destroyed
 
-- name: Remove the boot disk
-  ansible.builtin.file:
-    path: "{{ libvirt_pool_dir }}/{{ item }}.qcow2"
-    state: absent
+# - name: Destroy the VM
+#   community.libvirt.virt:
+#     name: "{{ item.value.name }}"
+#     command: undefine
 
-- name: Remove the config disk
-  ansible.builtin.file:
-    path: "{{ libvirt_pool_dir }}/{{ item }}-conf.iso"
-    state: absent
+# - name: Remove the boot disk
+#   ansible.builtin.file:
+#     path: "{{ libvirt_pool_dir }}/{{ item.value.name }}.qcow2"
+#     state: absent
+
+# - name: Remove the config disk
+#   ansible.builtin.file:
+#     path: "{{ libvirt_pool_dir }}/{{ item.value.name }}-conf.iso"
+#     state: absent
+
+- name: Remove the old VM from netbox inventory
+  netbox.netbox.netbox_device:
+    netbox_url: http://node-01.k8s.domski.tech:8000
+    netbox_token: 0123456789abcdef0123456789abcdef01234567
+    data:
+      name: "{{ item.value.name }}"
+      status: offline
+  when: item.value.status.value == "decommissioning"
+  # delegate_to: localhost
+  # delegate_facts: true

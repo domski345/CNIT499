@@ -1,25 +1,22 @@
 ---
 # Create VMs according to inventory
 
-- name: Get VMs list
-  community.libvirt.virt:
-    command: list_vms
-  register: existing_vms
-  changed_when: no
+# The behavior is as follows:
+# planned- create the VM
+# failed- recreate the VM
+# decommissioning- delete the VM
+# Don't set the status to anything else
+
+- name: Decommission VMs
+  ansible.builtin.include_tasks: delete_vm.yml
+  loop: "{{ query('netbox.netbox.nb_lookup', 'devices',
+                  api_endpoint='http://node-01.k8s.domski.tech:8000/',
+                  token='0123456789abcdef0123456789abcdef01234567') }}"
+  when: (item.value.status.value == "decommissioning") or (item.value.status.value == "failed")
 
 - name: iosxr vm provision role
-  ansible.builtin.include_tasks: install_xr_vm.yml
-  when: "item not in existing_vms.list_vms"
-  loop: "{{ groups['iosxr'] }}"
-  ignore_errors: true
-
-- name: ios vm provision role
-  ansible.builtin.include_tasks: install_ios_vm.yml
-  when: "item not in existing_vms.list_vms"
-  loop: "{{ groups['ios'] }}"
-  ignore_errors: true
-
-- name: VM delete role
-  ansible.builtin.include_tasks: delete_vm.yml
-  when: "item not in groups['vms']"
-  loop: "{{ existing_vms.list_vms }}"
+  ansible.builtin.include_tasks: install_vm.yml
+  loop: "{{ query('netbox.netbox.nb_lookup', 'devices',
+                  api_endpoint='http://node-01.k8s.domski.tech:8000/',
+                  token='0123456789abcdef0123456789abcdef01234567') }}"
+  when: (item.value.status.value == "planned") or (item.value.status.value == "failed")

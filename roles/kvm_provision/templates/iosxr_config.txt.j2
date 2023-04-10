@@ -1,7 +1,7 @@
 !! IOS XR Configuration 6.3.1
 !! Last configuration change at Thu Jan 12 03:48:40 2023 by ansible
 !
-hostname {{ item }}
+hostname {{ item.value.name }}
 clock timezone EST -5
 clock summer-time EDT recurring
 domain name cit.lcl
@@ -12,7 +12,7 @@ vrf Mgmt
 !
 interface MgmtEth0/0/CPU0/0
  vrf Mgmt
- ipv4 address dhcp
+ ipv4 address {{ item.value.primary_ip4.address }}
  no shutdown
 !
 router static

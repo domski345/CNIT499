@@ -13,15 +13,21 @@
         line: '%wheel        ALL=(ALL)       NOPASSWD: ALL'
         validate: /usr/sbin/visudo -cf %s
 
-- name: Configure Gluster on the HDD hosts
-  hosts: hdd
-  gather_facts: yes
-  become: yes
-  tasks:
+    # - name: Install Gluster fix(es).
+    #   ansible.builtin.dnf:
+    #     # name: vdsm-gluster
+    #     name: centos-release-ovirt45
+    #     state: latest
+
+# - name: Configure Gluster on the HDD hosts
+#   hosts: hdd
+#   gather_facts: yes
+#   become: yes
+#   tasks:
   
-    - name: Gluster provision role
-      ansible.builtin.include_role:
-        name: gluster
+#     - name: Gluster provision role
+#       ansible.builtin.include_role:
+#         name: gluster
       
 - name: Configure Gluster on the NVMe hosts
   hosts: nvme
@@ -32,6 +38,6 @@
     - name: Gluster provision role
       ansible.builtin.include_role:
         name: gluster
-  
+
 
 

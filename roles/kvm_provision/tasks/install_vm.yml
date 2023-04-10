@@ -1,0 +1,38 @@
+---
+
+- name: Get relevant variables
+  set_fact: 
+    template_image: "{{ lookup('netbox.netbox.nb_lookup', 'device-types',
+                  api_filter='slug=' + item.value.device_type.slug,
+                  api_endpoint='http://node-01.k8s.domski.tech:8000/',
+                  token='0123456789abcdef0123456789abcdef01234567').value.custom_fields.template_image }}"
+    template_config: "{{ lookup('netbox.netbox.nb_lookup', 'device-types',
+                  api_filter='slug=' + item.value.device_type.slug,
+                  api_endpoint='http://node-01.k8s.domski.tech:8000/',
+                  token='0123456789abcdef0123456789abcdef01234567').value.custom_fields.template_config }}"
+
+- name: Copy image to pool directory
+  ansible.builtin.copy:
+    dest: "{{ libvirt_pool_dir }}/{{ item.value.name }}.qcow2"
+    src: "{{ libvirt_base_dir }}/{{ template_image }}"
+    force: no
+    remote_src: yes 
+    mode: 0660
+
+- name: XR CVAC tasks (if applicable)
+  ansible.builtin.include_tasks: install_xr_vm.yml
+  when: item.value.device_type.slug == "ios-xrv"
+
+- name: Define the VM
+  community.libvirt.virt:
+    command: define
+    xml: "{{ lookup('template', '{{ template_config }}') }}"
+
+- name: Set the status to Active in netbox inventory
+  netbox.netbox.netbox_device:
+    netbox_url: http://node-01.k8s.domski.tech:8000/
+    netbox_token: 0123456789abcdef0123456789abcdef01234567
+    data:
+      name: "{{ item.value.name }}"
+      status: active
+    state: present

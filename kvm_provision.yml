@@ -2,7 +2,7 @@
 # tasks file for kvm_provision
 - name: Deploy a KVM machine
   hosts: infra
-  gather_facts: yes
+  gather_facts: no
   become: yes
   tasks:
   
@@ -10,14 +10,4 @@
       ansible.builtin.include_role:
         name: kvm_provision
 
-    
-    - name: Start VMs
-      community.libvirt.virt:
-        name: "{{ item }}"
-        state: running
-      loop: "{{ groups['iosxr'] }}"
-      delay: 100 # each vm takes ~210 seconds to start
-      # register: vm_start_results
-      # until: "vm_start_results is success"
-      # retries: 5
 
