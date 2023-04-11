@@ -9,15 +9,15 @@ def device():
     print("Yo Dawg, I heard you like routers?") # Sarcastic remark
 
     #Error checking
-    # if request.is_json:
-    #     return {"error": "Request must be JSON"}, 415
+    if not request.is_json:
+        return {"error": "Request must be JSON"}, 415
 
     # Get initial call from netbox webhook when device is created
     device = request.get_json()
 
     # Set variables accordingly
     id = device['id']
-    template_id = device['device_type.slug']
+    template_id = device['device_type']['slug']
     name = device['name']
 
     # Make API call to GNS3 to create the VM
@@ -27,11 +27,12 @@ def device():
 
     # Extract GNS3 assigned data
     node_id = response.json()["node_id"]
+    return f"{node_id}", 201
 
     # Update netbox to reflect node_id change and status
-    nb = netbox
-    update = {'id': f"{id}", 'serial': f"{template_id}"}
-    nb.dcim.device.update(update)
+    # nb = pynetbox.api('http://netbox.brownout.tech:8000/', token='0123456789abcdef0123456789abcdef01234567')
+    # update = {'id': f"{id}", 'serial': f"{template_id}"}
+    # nb.dcim.device.update(update)
 
     # Happy return code back to netbox
     return "Saul Goodman :)", 201
