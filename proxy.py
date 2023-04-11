@@ -30,13 +30,12 @@ def device():
 
     # Make API call to update the VM's name in GNS3
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{node_id}"
-    data = {"name": f"{name}"}
+    data = {"name": name}
     response = requests.put(api_url, json=data)
 
     # Update netbox to reflect node_id change and status
-    # nb = pynetbox.api('http://netbox.brownout.tech:8000/', token='0123456789abcdef0123456789abcdef01234567')
-    # update = {'id': f"{id}", 'serial': f"{template_id}"}
-    # nb.dcim.device.update(update)
+    nb = pynetbox.api('http://netbox.brownout.tech:8000/', token='0123456789abcdef0123456789abcdef01234567')
+    nb.dcim.devices.update([{'id': id, 'serial': node_id}])
 
     # Happy return code back to netbox
     return "Saul Goodman :)", 201
