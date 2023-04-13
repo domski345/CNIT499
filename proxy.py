@@ -46,10 +46,10 @@ def device_delete():
         return {"error": "Request must be JSON"}, 415
     device = request.get_json()
     node_id = device['data']['serial']
+    name = device['data']['name']
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{node_id}"
-    response = requests.delete(api_url)
-    print(f"response: {response}")
-    return response, 201
+    requests.delete(api_url)
+    return f"{name} was deleted", 201
 
 # @application.post("/cable")
 # def device():
