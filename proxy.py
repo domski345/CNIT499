@@ -38,17 +38,18 @@ def device():
     nb.dcim.devices.update([{'id': id, 'serial': node_id}])
 
     # Happy return code back to netbox
-    return "Saul Goodman :)", 201
+    return "", 201
 
 @application.delete("/device")
 def device_delete():
     if not request.is_json:
         return {"error": "Request must be JSON"}, 415
     device = request.get_json()
-    node_id = device['serial']
+    node_id = device['data']['serial']
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{node_id}"
     response = requests.delete(api_url)
-    return "response", 201
+    print(f"response: {response}")
+    return response, 201
 
 # @application.post("/cable")
 # def device():
