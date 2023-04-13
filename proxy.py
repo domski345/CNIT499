@@ -17,9 +17,9 @@ def device():
     device = request.get_json()
 
     # Set variables accordingly
-    id = device['id']
-    template_id = device['device_type']['slug']
-    name = device['name']
+    id = device['data']['id']
+    template_id = device['data']['device_type']['slug']
+    name = device['data']['name']
 
     # Make API call to GNS3 to create the VM
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/templates/{template_id}"
