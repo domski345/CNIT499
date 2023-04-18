@@ -64,8 +64,8 @@ def cable():
     id = cable['data']['id']
     a_node_id = cable['data']['a_terminations'][0]['object']['device']['id']
     b_node_id = cable['data']['b_terminations'][0]['object']['device']['id']
-    a_interface_id = cable['data']['a_terminations'][0]['object']['id']
-    b_interface_id = cable['data']['a_terminations'][0]['object']['id']
+    a_interface_id = cable['data']['a_terminations'][0]['object_id']
+    b_interface_id = cable['data']['a_terminations'][0]['object_id']
 
     # Get necessary data from netbox
     a_id = nb.dcim.devices.get(id=a_node_id)['serial']
