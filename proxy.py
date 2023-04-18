@@ -61,6 +61,8 @@ def cable():
     
     cable = request.get_json()
 
+    print(cable)
+
     id = cable['data']['id']
     a_node_id = cable['data']['a_terminations']['object']['device']['id']
     b_node_id = cable['data']['b_terminations']['object']['device']['id']
