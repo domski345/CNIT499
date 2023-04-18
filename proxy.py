@@ -23,7 +23,7 @@ def device():
 
     # Make API call to GNS3 to create the VM
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/templates/{template_id}"
-    data = {"x": random.randrange(1,100), "y": random.randrange(1,100), "name": f"{name}", "compute_id": "local"}
+    data = {"x": random.randrange(-800,800), "y": random.randrange(-500,500), "name": f"{name}", "compute_id": "local"}
     response = requests.post(api_url, json=data)
 
     # Extract GNS3 assigned data
