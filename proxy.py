@@ -52,7 +52,7 @@ def device_delete():
     return f"{name} was deleted", 201
 
 @application.post("/cable")
-def device():
+def cable():
     print("Yo Dawg, I heard you like cables?") # Sarcastic remark
 
     #Error checking
