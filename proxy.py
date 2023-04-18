@@ -84,3 +84,13 @@ def cable():
     # Update netbox with the cable ID
     nb.dcim.cables.update([{'id': id, 'label': link_id}])
     return f"Cable: {link_id} was created", 201
+
+@application.delete("/cable")
+def cable_delete():
+    if not request.is_json:
+        return {"error": "Request must be JSON"}, 415
+    device = request.get_json()
+    link_id = device['data']['label']
+    api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/links/{link_id}"
+    requests.delete(api_url)
+    return f"{link_id} was deleted", 201
