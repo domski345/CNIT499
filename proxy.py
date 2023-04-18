@@ -66,8 +66,8 @@ def cable():
     id = cable['data']['id']
     a_node_id = cable['data']['a_terminations'][0]['object']['device']['id']
     b_node_id = cable['data']['b_terminations'][0]['object']['device']['id']
-    a_interface_id = cable['data']['a_terminations']['object']['id']
-    b_interface_id = cable['data']['a_terminations']['object']['id']
+    a_interface_id = cable['data']['a_terminations'][0]['object']['id']
+    b_interface_id = cable['data']['a_terminations'][0]['object']['id']
     # print(nb.dcim.devices.get(a_node_id))
 
     a_label = nb.dcim.interfaces.get(id=a_interface_id)['label']
