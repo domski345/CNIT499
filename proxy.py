@@ -77,7 +77,9 @@ def cable():
     response = requests.put(api_url, json=data)
 
     # Extract GNS3 assigned data
-    link_id = response.json()['link_id']
+    print(response)
+
+    link_id = response.json()["link_id"]
 
     # Update netbox with the cable ID
     nb.dcim.interfaces.update([{'id': id, 'label': link_id}])
