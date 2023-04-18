@@ -73,11 +73,10 @@ def cable():
     a_label = nb.dcim.interfaces.get(id=a_interface_id)['label']
     b_label = nb.dcim.interfaces.get(id=b_interface_id)['label']
 
-    print(f"{a_id}, {a_label}")
-
     # Make API call to update the VM's name in GNS3
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/links"
     data = {"nodes": [{ "node_id": a_id, "adapter_number": a_label, "port_number": 0 }, { "node_id": b_id, "adapter_number": b_label, "port_number": 0 }]}
+    print(data)
     response = requests.put(api_url, json=data)
 
     # Extract GNS3 assigned data
