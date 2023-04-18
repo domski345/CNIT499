@@ -1,4 +1,4 @@
-import requests,pynetbox,random
+import requests,pynetbox,random, json
 from flask import Flask, request, jsonify
 application = Flask(__name__)
 project_id = "3bcd7eca-5c2e-4199-8c7d-690874e6ab72"
@@ -76,8 +76,7 @@ def cable():
     # Make API call to update the VM's name in GNS3
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/links"
     data = {"nodes": [{ "node_id": f"{a_id}", "adapter_number": int(a_label), "port_number": 0 }, { "node_id": f"{b_id}", "adapter_number": int(b_label), "port_number": 0 }]}
-    print(f"{api_url}, \n{data}")
-    response = requests.put(api_url, json=data)
+    response = requests.put(api_url, json=json.dumps(data))
 
     # Extract GNS3 assigned data
     link_id = response.json()["link_id"]
