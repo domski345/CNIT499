@@ -51,20 +51,33 @@ def device_delete():
     requests.delete(api_url)
     return f"{name} was deleted", 201
 
-# @application.post("/cable")
-# def device():
-#     print("Yo Dawg, I heard you like cables?") # Sarcastic remark
+@application.post("/cable")
+def device():
+    print("Yo Dawg, I heard you like cables?") # Sarcastic remark
 
-#     #Error checking
-#     if not request.is_json:
-#         return {"error": "Request must be JSON"}, 415
+    #Error checking
+    if not request.is_json:
+        return {"error": "Request must be JSON"}, 415
     
-#     cable = request.get_json()
+    cable = request.get_json()
 
-#     id = cable['id']
-#     a_node_id = cable['a_terminations']['object']['device']['id']
-#     b_node_id = cable['b_terminations']['object']['device']['id']
-#     a_interface_url = cable['a_terminations']['object']['url']
-#     b_interface_url = cable['a_terminations']['object']['url']
+    id = cable['data']['id']
+    a_node_id = cable['data']['a_terminations']['object']['device']['id']
+    b_node_id = cable['data']['b_terminations']['object']['device']['id']
+    a_interface_id = cable['data']['a_terminations']['object']['id']
+    b_interface_id = cable['data']['a_terminations']['object']['id']
+    # print(nb.dcim.devices.get(a_node_id))
 
-#     print(nb.dcim.devices.get(a_node_id))
+    a_label = nb.dcim.interfaces.get(id=a_interface_id)['label']
+    b_label = nb.dcim.interfaces.get(id=b_interface_id)['label']
+
+    # Make API call to update the VM's name in GNS3
+    api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/links"
+    data = {"nodes": [{ "node_id": a_node_id, "adapter_number": a_label, "port_number": 0 }, { "node_id": b_node_id, "adapter_number": b_label, "port_number": 0 }]}
+    response = requests.put(api_url, json=data)
+
+    # Extract GNS3 assigned data
+    link_id = response.json()["link_id"]
+
+    # Update netbox with the cable ID
+    nb.dcim.interfaces.update([{'id': id, 'label': link_id}])
