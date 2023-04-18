@@ -38,7 +38,7 @@ def device():
     nb.dcim.devices.update([{'id': id, 'serial': node_id}])
 
     # Happy return code back to netbox
-    return "", 201
+    return f"Node {node_id} was created", 201
 
 @application.delete("/device")
 def device_delete():
@@ -81,3 +81,4 @@ def device():
 
     # Update netbox with the cable ID
     nb.dcim.interfaces.update([{'id': id, 'label': link_id}])
+    return f"Cable: {link_id} was created", 201
