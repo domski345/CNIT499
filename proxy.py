@@ -95,3 +95,16 @@ def cable_delete():
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/links/{link_id}"
     requests.delete(api_url)
     return f"{link_id} was deleted", 201
+
+@application.post("/ip")
+def ip():
+    print("Yo Dawg, I heard you like IP addresses?") # Sarcastic remark
+
+    #Error checking
+    if not request.is_json:
+        return {"error": "Request must be JSON"}, 415
+    
+    ip = request.get_json()
+    if ip['data']['primary_ip']:
+        print(ip)
+    return "", 201
