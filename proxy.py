@@ -124,10 +124,10 @@ def ip():
         tn.write(b"cisco\r")
         tn.read_until(b"Password:")
         tn.write(b"cisco\r")
-        tn.read_until(b"#")
+        tn.read_until(b"SYSTEM CONFIGURATION COMPLETED")
         tn.write(b"config\r")
         tn.read_until(b"#")
-        tn.write(f"hostname {ip['data']['name']}".encode('utf8'))
+        tn.write(f"hostname {ip['data']['name']}\n".encode('utf8'))
         tn.read_until(b"#")
         tn.write(b"vrf Mgmt address-family ipv4 unicast\r")
         tn.read_until(b"#")
@@ -147,7 +147,7 @@ def ip():
         tn.read_until(b":")
         tn.write(b"yes\n")
         print(tn.read_until(b"#"))
-        
+
         nb.dcim.devices.update([{'id': ip['data']['id'], 'status': "active"}])
 
     return "", 201
