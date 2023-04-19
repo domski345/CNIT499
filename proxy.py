@@ -106,5 +106,7 @@ def ip():
     
     ip = request.get_json()
     if ip['data']['primary_ip']:
-        print(ip)
+        api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ip['data']['serial']}/start"
+        response = requests.post(api_url)
+        print(response)
     return "", 201
