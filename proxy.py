@@ -105,6 +105,7 @@ def ip():
         return {"error": "Request must be JSON"}, 415
     
     ip = request.get_json()
+    print(ip['data']['status'])
     if ip['data']['status'] is "planned":
         api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ip['data']['serial']}/start"
         response = requests.post(api_url)
