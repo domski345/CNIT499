@@ -109,6 +109,6 @@ def ip():
     if ip['data']['status']['value'] == 'planned':
         api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ip['data']['serial']}/start"
         response = requests.post(api_url)
-        nb.dcim.devices.update([{'id': id, 'status': "active"}])
+        nb.dcim.devices.update([{'id': ip['data']['id'], 'status': "active"}])
         print(response)
     return "", 201
