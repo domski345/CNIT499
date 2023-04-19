@@ -110,12 +110,11 @@ def ip():
     if ip['data']['status']['value'] == 'planned':
         api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ip['data']['serial']}/start"
         requests.post(api_url)
-        nb.dcim.devices.update([{'id': ip['data']['id'], 'status': "active"}])
 
         tn = Telnet('gns3.brownout.tech', ip['data']['asset_tag'])
         tn.read_until(b"Press RETURN to get started")
-        tn.write(b"\n")
-        tn.read_until(b"Enter root-system username:")
-        print(tn.read_all().decode('ascii'))
+        tn.write(b"\r")
+        print(tn.read_until(b"Enter root-system username:"))
+        nb.dcim.devices.update([{'id': ip['data']['id'], 'status': "active"}])
 
     return "", 201
