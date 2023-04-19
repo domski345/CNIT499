@@ -28,6 +28,7 @@ def device():
 
     # Extract GNS3 assigned data
     node_id = response.json()["node_id"]
+    console = response.json()["console"]
 
     # Make API call to update the VM's name in GNS3
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{node_id}"
@@ -35,7 +36,7 @@ def device():
     response = requests.put(api_url, json=data)
 
     # Update netbox to reflect node_id change and status
-    nb.dcim.devices.update([{'id': id, 'serial': node_id}])
+    nb.dcim.devices.update([{'id': id, 'serial': node_id, 'asset_tag': console}])
 
     # Happy return code back to netbox
     return f"Node {node_id} was created", 201
