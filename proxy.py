@@ -102,23 +102,24 @@ def cable_delete():
     requests.delete(api_url)
     return f"{link_id} was deleted", 201
 
-@application.post("/ip")
-def ip():
+# simulated "Zero Touch Provisioning"
+@application.post("/ztp")
+def ztp():
     print("Yo Dawg, I heard you like IP addresses?") # Sarcastic remark
 
     #Error checking
     if not request.is_json:
         return {"error": "Request must be JSON"}, 415
     
-    ip = request.get_json()
-    print(ip['data']['status']['value'])
-    if ip['data']['status']['value'] == 'planned':
-        api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ip['data']['serial']}/start"
+    ztp = request.get_json()
+    print(ztp['data']['status']['value'])
+    if ztp['data']['status']['value'] == 'planned':
+        api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ztp['data']['serial']}/start"
         requests.post(api_url)
-        device_args=[ip['data']['asset_tag'],ip['data']['name'],ip['data']['primary_ip6']['address'],ip['data']['id']]
+        device_args=[ztp['data']['asset_tag'],ztp['data']['name'],ztp['data']['primary_ip6']['address'],ztp['data']['id']]
         configure_thread = threading.Thread(target=configure, name="configure_device", args=device_args)
         configure_thread.start()
-    return f"{ip['data']['name']} is being configured", 201
+    return f"{ztp['data']['name']} is being configured", 201
 
 def configure(port,hostname,ip,id):
         tn = Telnet('gns3.brownout.tech', port)
