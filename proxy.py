@@ -172,6 +172,8 @@ def configure(port,hostname,ip,id):
         tn.write(b"crypto key generate rsa\n")
         tn.read_until(b":")
         tn.write(b"\n")
-        print(tn.read_until(b"#"))
+        tn.read_until(b"#")
+        tn.write(b"exit\n")
+        tn.close()
 
         nb.dcim.devices.update([{'id': id, 'status': "active"}])
