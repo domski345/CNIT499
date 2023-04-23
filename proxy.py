@@ -112,7 +112,6 @@ def ztp():
         return {"error": "Request must be JSON"}, 415
     
     ztp = request.get_json()
-    print(ztp['data']['status']['value'])
     if ztp['data']['status']['value'] == 'planned':
         api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ztp['data']['serial']}/start"
         requests.post(api_url)
@@ -163,6 +162,12 @@ def configure(port,hostname,ip,id):
         tn.write(b"ssh server v2\n")
         tn.read_until(b"#")
         tn.write(b"ssh server vrf Mgmt\n")
+        tn.read_until(b"#")
+        tn.write(b"lldp\n")
+        tn.read_until(b"#")
+        tn.write(b"exit\n")
+        tn.read_until(b"#")
+        tn.write(b"xml agent tty iteration off\n")
         tn.read_until(b"#")
         tn.write(b"xml agent vrf Mgmt\n")
         tn.read_until(b"#")
