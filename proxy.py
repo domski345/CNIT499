@@ -115,12 +115,13 @@ def ip():
     if ip['data']['status']['value'] == 'planned':
         api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ip['data']['serial']}/start"
         requests.post(api_url)
-        configure_thread = threading.Thread(target=configure, name="configure_device", args=ip)
+        device_args=[ip['data']['asset_tag'],ip['data']['name'],ip['data']['primary_ip6']['address'],ip['data']['id']]
+        configure_thread = threading.Thread(target=configure, name="configure_device", args=device_args)
         configure_thread.start()
     return f"{ip['data']['name']} is being configured", 201
 
-def configure(ip):
-        tn = Telnet('gns3.brownout.tech', ip['data']['asset_tag'])
+def configure(port,hostname,ip,id):
+        tn = Telnet('gns3.brownout.tech', port)
         tn.read_until(b"Press RETURN to get started")
         tn.write(b"\r")
         tn.read_until(b"Enter root-system username:")
@@ -138,7 +139,7 @@ def configure(ip):
         tn.read_until(b"#")
         tn.write(b"config\r")
         tn.read_until(b"#")
-        tn.write(f"hostname {ip['data']['name']}\n".encode('utf8'))
+        tn.write(f"hostname {hostname}\n".encode('utf8'))
         tn.read_until(b"#")
         tn.write(b"vrf Mgmt address-family ipv6 unicast\r")
         tn.read_until(b"#")
@@ -152,7 +153,7 @@ def configure(ip):
         tn.read_until(b"#")
         tn.write(b"vrf Mgmt\r")
         tn.read_until(b"#")
-        tn.write(f"ipv6 address {ip['data']['primary_ip6']['address']}\n".encode('utf8'))
+        tn.write(f"ipv6 address {ip}\n".encode('utf8'))
         tn.read_until(b"#")
         tn.write(b"no shut\n")
         tn.read_until(b"#")
@@ -173,4 +174,4 @@ def configure(ip):
         tn.write(b"\n")
         print(tn.read_until(b"#"))
 
-        nb.dcim.devices.update([{'id': ip['data']['id'], 'status': "active"}])
+        nb.dcim.devices.update([{'id': id, 'status': "active"}])
