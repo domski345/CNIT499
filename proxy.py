@@ -1,4 +1,4 @@
-import requests,pynetbox,random, json
+import requests,pynetbox,random, json, threading
 from flask import Flask, request, jsonify
 from telnetlib import Telnet
 application = Flask(__name__)
@@ -115,7 +115,11 @@ def ip():
     if ip['data']['status']['value'] == 'planned':
         api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ip['data']['serial']}/start"
         requests.post(api_url)
+        configure_thread = threading.Thread(target=configure, name="configure_device", args=ip)
+        configure_thread.start()
+    return f"{ip['data']['name']} is being configured", 201
 
+def configure(ip):
         tn = Telnet('gns3.brownout.tech', ip['data']['asset_tag'])
         tn.read_until(b"Press RETURN to get started")
         tn.write(b"\r")
@@ -170,5 +174,3 @@ def ip():
         print(tn.read_until(b"#"))
 
         nb.dcim.devices.update([{'id': ip['data']['id'], 'status': "active"}])
-
-    return "", 201
