@@ -31,9 +31,13 @@ def device():
     node_id = response.json()["node_id"]
     console = response.json()["console"]
 
+    # Generate mac address for mgmt nic
+    mac_address = "00:20:91:%02x:%02x:%02x" % (random.randint(0, 255),random.randint(0, 255),random.randint(0, 255))
+    options = f"-nic bridge,br=br0,model=e1000,mac={mac_address}"
+
     # Make API call to update the VM's name in GNS3
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{node_id}"
-    data = {"name": name}
+    data = {"name": name, "properties": { "options": options } }
     response = requests.put(api_url, json=data)
 
     # Update netbox to reflect node_id change and status
@@ -144,7 +148,7 @@ def ip():
         tn.read_until(b"#")
         tn.write(b"vrf Mgmt\r")
         tn.read_until(b"#")
-        tn.write(f"ipv4 address {ip['data']['primary_ip4']['address']} 255.255.255.0\n".encode('utf8'))
+        tn.write(f"ipv4 address {ip['data']['primary_ip4']['address']}\n".encode('utf8'))
         tn.read_until(b"#")
         tn.write(b"no shut\n")
         tn.read_until(b"#")
