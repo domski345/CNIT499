@@ -1,6 +1,8 @@
 import requests,pynetbox,random, json, threading
 from flask import Flask, request, jsonify
 from telnetlib import Telnet
+from napalm import get_network_driver
+from jinja2 import Template
 application = Flask(__name__)
 project_id = "3bcd7eca-5c2e-4199-8c7d-690874e6ab72"
 nb = pynetbox.api('http://netbox.brownout.tech:8000/', token='0123456789abcdef0123456789abcdef01234567')
@@ -102,10 +104,39 @@ def cable_delete():
     requests.delete(api_url)
     return f"{link_id} was deleted", 201
 
+# IP address config
+@application.post("/ip")
+def ip():
+    print("Yo Dawg, I heard you like IP addresses?") # Sarcastic remark
+
+    #Error checking
+    if not request.is_json:
+        return {"error": "Request must be JSON"}, 415
+    
+    conf = request.get_json()
+    ip = conf['data']['address']
+    vrf = conf['data']['vrf']['name']
+    family = conf['data']['family']['value']
+    iface = conf['data']['assigned_object']['name']
+    device_id = conf['data']['assigned_object']['device']['id']
+    mgmt_ip = nb.dcim.devices.get(id=device_id)['primary_ip']['address']
+    driver = nb.dcim.devices.get(id=device_id)['platform']['slug'] 
+    template = """interface {{ iface }}
+    {% if vrf not None %}
+      vrf {{ vrf }}
+    {% endif %}
+    ipv{{ family }} address {{ ip }}
+    no shutdown
+    """
+    j2_template = Template(template)
+    print(j2_template.render(data))
+
+    return f"{ip} is being configured", 201
+
 # simulated "Zero Touch Provisioning"
 @application.post("/ztp")
 def ztp():
-    print("Yo Dawg, I heard you like IP addresses?") # Sarcastic remark
+    print("Yo Dawg, I heard you like provisioning devices?") # Sarcastic remark
 
     #Error checking
     if not request.is_json:
