@@ -125,7 +125,7 @@ def ztp():
 def debug():
     print("Uh Oh") # Sarcastic remark
 
-    print(request.get_json(indent=4))
+    print(json.dumps(request.get_json(),indent=4))
     return "debug'd", 201
 
 def configure(port,hostname,ip,id):
