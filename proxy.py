@@ -122,7 +122,7 @@ def ztp():
 
 # Debug
 @application.post("/debug")
-def ztp():
+def debug():
     print("Uh Oh") # Sarcastic remark
 
     print(request.get_json(indent=4))
