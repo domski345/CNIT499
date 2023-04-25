@@ -120,6 +120,14 @@ def ztp():
         configure_thread.start()
     return f"{ztp['data']['name']} is being configured", 201
 
+# Debug
+@application.post("/debug")
+def ztp():
+    print("Uh Oh") # Sarcastic remark
+
+    print(request.get_json(indent=4))
+    return "debug'd", 201
+
 def configure(port,hostname,ip,id):
         tn = Telnet('gns3.brownout.tech', port)
         tn.read_until(b"Press RETURN to get started")
