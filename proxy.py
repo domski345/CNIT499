@@ -114,13 +114,15 @@ def ip():
         return {"error": "Request must be JSON"}, 415
     
     conf = request.get_json()
-    ip = conf['data']['address']
-    vrf = conf['data']['vrf']['name']
-    family = conf['data']['family']['value']
-    iface = conf['data']['assigned_object']['name']
     device_id = conf['data']['assigned_object']['device']['id']
-    mgmt_ip = nb.dcim.devices.get(id=device_id)['primary_ip']['address']
-    driver = nb.dcim.devices.get(id=device_id)['platform']['slug'] 
+    data = {
+        "ip": conf['data']['address'],
+        "vrf": conf['data']['vrf']['name'],
+        "family": conf['data']['family']['value'],
+        "iface": conf['data']['assigned_object']['name'],
+        "mgmt_ip": nb.dcim.devices.get(id=device_id)['primary_ip']['address'],
+        "driver": nb.dcim.devices.get(id=device_id)['platform']['slug']
+    } 
     template = """interface {{ iface }}
     {% if vrf %}
       vrf {{ vrf }}
