@@ -134,10 +134,8 @@ interface {{ iface }}
     device = device_driver(hostname=mgmt_ip,username='cisco',password='cisco')
     device.open()
     device.load_merge_candidate(config=j2_template.render(data))
-    print(device.compare_config())
+    device.commit_config()
     device.close()
-
-    # print(j2_template.render(data))
 
     return f"{ip} is being configured", 201
 
