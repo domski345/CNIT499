@@ -122,7 +122,7 @@ def ip():
     mgmt_ip = nb.dcim.devices.get(id=device_id)['primary_ip']['address']
     driver = nb.dcim.devices.get(id=device_id)['platform']['slug'] 
     template = """interface {{ iface }}
-    {% if vrf not None %}
+    {% if vrf %}
       vrf {{ vrf }}
     {% endif %}
     ipv{{ family }} address {{ ip }}
