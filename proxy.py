@@ -114,24 +114,30 @@ def ip():
         return {"error": "Request must be JSON"}, 415
     
     conf = request.get_json()
-    device_id = conf['data']['assigned_object']['device']['id']
+    device_id = conf['data']['assigned_object']['device']['id'],
+    mgmt_ip = nb.dcim.devices.get(id=device_id)['primary_ip']['address']
+    driver = nb.dcim.devices.get(id=device_id)['platform']['slug']
     data = {
         "ip": conf['data']['address'],
         "vrf": conf['data']['vrf']['name'],
         "family": conf['data']['family']['value'],
-        "iface": conf['data']['assigned_object']['name'],
-        "mgmt_ip": nb.dcim.devices.get(id=device_id)['primary_ip']['address'],
-        "driver": nb.dcim.devices.get(id=device_id)['platform']['slug']
+        "iface": conf['data']['assigned_object']['name']
     } 
-    template = """interface {{ iface }}
-    {% if vrf %}
-      vrf {{ vrf }}
-    {% endif %}
-    ipv{{ family }} address {{ ip }}
-    no shutdown
-    """
+    template = """
+interface {{ iface }}
+{% if vrf %} vrf {{ vrf }}{% endif %}
+ ipv{{ family }} address {{ ip }}
+ no shutdown
+"""
     j2_template = Template(template)
-    print(j2_template.render(data))
+    device_driver = get_network_driver(driver)
+    device = device_driver(hostname=mgmt_ip,username='cisco',password='cisco')
+    device.open()
+    device.load_merge_candidate(config=j2_template.render(data))
+    print(device.compare_config())
+    device.close()
+
+    # print(j2_template.render(data))
 
     return f"{ip} is being configured", 201
 
