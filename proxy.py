@@ -1,4 +1,4 @@
-import requests,pynetbox,random, json, threading
+import requests,pynetbox,random, json, threading, ipaddress
 from flask import Flask, request, jsonify
 from telnetlib import Telnet
 from napalm import get_network_driver
@@ -118,7 +118,7 @@ def ip():
     mgmt_ip = nb.dcim.devices.get(id=device_id)['primary_ip']['address']
     driver = nb.dcim.devices.get(id=device_id)['platform']['slug']
     data = {
-        "ip": conf['data']['address'],
+        "ip": IPv4Interface(conf['data']['address']).ip,
         "vrf": conf['data']['vrf']['name'],
         "family": conf['data']['family']['value'],
         "iface": conf['data']['assigned_object']['name']
