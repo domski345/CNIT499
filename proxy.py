@@ -232,3 +232,5 @@ def configure(port,hostname,ip6,ip4,id):
         tn.close()
 
         nb.dcim.devices.update([{'id': id, 'status': "active"}])
+
+#def configurejunos():
