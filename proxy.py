@@ -163,7 +163,7 @@ def debug():
     print("Uh Oh") # Sarcastic remark
 
     print(json.dumps(request.get_json(),indent=4))
-    return "debug'd?", 201
+    return "debug'd!", 201
 
 def configure(port,hostname,ip6,ip4,id):
         tn = Telnet('gns3.brownout.tech', port)
