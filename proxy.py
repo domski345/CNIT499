@@ -152,7 +152,7 @@ def ztp():
     if ztp['data']['status']['value'] == 'planned':
         api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ztp['data']['serial']}/start"
         requests.post(api_url)
-        device_args=[ztp['data']['asset_tag'],ztp['data']['name'],ztp['data']['primary_ip6']['address'],ztp['data']['primary_ip4']['address'],ztp['data']['id']]
+        device_args=[ztp['data']['asset_tag'],ztp['data']['name'],ztp['data']['primary_ip6']['address'],ztp['data']['id']]
         configure_thread = threading.Thread(target=configure, name="configure_device", args=device_args)
         configure_thread.start()
     return f"{ztp['data']['name']} is being configured", 201
@@ -165,7 +165,7 @@ def debug():
     print(json.dumps(request.get_json(),indent=4))
     return "debug'd!", 201
 
-def configure(port,hostname,ip6,ip4,id):
+def configure(port,hostname,ip6,id):
         tn = Telnet('gns3.brownout.tech', port)
         tn.read_until(b"Press RETURN to get started")
         tn.write(b"\r")
@@ -198,15 +198,11 @@ def configure(port,hostname,ip6,ip4,id):
         tn.read_until(b"#")
         tn.write(b"router static vrf Mgmt address-family ipv6 unicast ::/0 2602:fe6a:301:1::1\r")
         tn.read_until(b"#")
-        tn.write(b"router static vrf Mgmt address-family ipv4 unicast 0.0.0.0/0 10.96.4.1\r")
-        tn.read_until(b"#")
         tn.write(b"interface MgmtEth0/0/CPU0/0\r")
         tn.read_until(b"#")
         tn.write(b"vrf Mgmt\r")
         tn.read_until(b"#")
         tn.write(f"ipv6 address {ip6}\n".encode('utf8'))
-        tn.read_until(b"#")
-        tn.write(f"ipv4 address {ip4}\n".encode('utf8'))
         tn.read_until(b"#")
         tn.write(b"no shut\n")
         tn.read_until(b"#")
