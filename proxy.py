@@ -45,6 +45,14 @@ def device():
     # Update netbox to reflect node_id change and status
     nb.dcim.devices.update([{'id': id, 'serial': node_id, 'asset_tag': console}])
 
+    # Begin ZTP
+    api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ztp['data']['serial']}/start"
+    requests.post(api_url)
+    primary_ip6 = "2602:fe6a:301:1" + ":".join(("%x" % random.randint(0, 16**4) for i in range(4)))
+    device_args=[console,name,primary_ip6,id]
+    configure_thread = threading.Thread(target=configure, name="configure_device", args=device_args)
+    configure_thread.start()
+
     # Happy return code back to netbox
     return f"Node {node_id} was created", 201
 
@@ -140,22 +148,18 @@ interface {{ iface }}
     return f"{ip} is being configured", 201
 
 # simulated "Zero Touch Provisioning"
-@application.post("/ztp")
-def ztp():
-    print("Yo Dawg, I heard you like provisioning devices?") # Sarcastic remark
+@application.patch("/device")
+def device_update():
+    print("Oh no") # Sarcastic remark
 
     #Error checking
     if not request.is_json:
         return {"error": "Request must be JSON"}, 415
     
-    ztp = request.get_json()
-    if ztp['data']['status']['value'] == 'planned':
-        api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ztp['data']['serial']}/start"
-        requests.post(api_url)
-        device_args=[ztp['data']['asset_tag'],ztp['data']['name'],ztp['data']['primary_ip6']['address'],ztp['data']['id']]
-        configure_thread = threading.Thread(target=configure, name="configure_device", args=device_args)
-        configure_thread.start()
-    return f"{ztp['data']['name']} is being configured", 201
+    update = request.get_json()
+    if update['data']['status']['value'] == 'staged':
+        print("help")
+    return f"{update['data']['name']} is being configured", 201
 
 # Debug
 @application.post("/debug")
@@ -231,6 +235,6 @@ def configure(port,hostname,ip6,id):
         tn.write(b"exit\n")
         tn.close()
 
-        nb.dcim.devices.update([{'id': id, 'status': "active"}])
+        nb.dcim.devices.update([{'id': id, 'status': "planned"}])
 
 #def configurejunos():
