@@ -116,7 +116,6 @@ def cable():
     # push ip address changes to Netbox
     nb.ipam.ip_addresses.update([{'id': ip_a_side.id, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': a_interface_id}])
     nb.ipam.ip_addresses.update([{'id': ip_b_side.id, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': b_interface_id}])
-    print (f"{ip_a_side.id}\n{ip_b_side.id}\n{a_interface_id}\n{b_interface_id}") # bug testing
 
     # configuration data for "a" side device
     data_a = {
