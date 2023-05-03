@@ -52,7 +52,7 @@ def device():
     primary_ip6 = nb.ipam.prefixes.get(2).available_ips.create() # 2 is the Mgmt prefix
     int_id = nb.dcim.interfaces.get(device_id=id,name="MgmtEth0/0/CPU0/0")['id']
     nb.ipam.ip_addresses.update([{'id': primary_ip6.id, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': int_id}])
-    nb.dcim.devices.update([{'id': id, 'status': "planned", 'primary_ip6.id': primary_ip6.id}])
+    nb.dcim.devices.update([{'id': id, 'status': "planned", 'primary_ip6': primary_ip6.id}])
     device_args=[console,name,primary_ip6,id]
     configure_thread = threading.Thread(target=configure, name="configure_device", args=device_args)
     configure_thread.start()
