@@ -46,9 +46,12 @@ def device():
     nb.dcim.devices.update([{'id': id, 'serial': node_id, 'asset_tag': console}])
 
     # Begin ZTP
-    api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{ztp['data']['serial']}/start"
+    api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/nodes/{node_id}/start"
     requests.post(api_url)
-    primary_ip6 = "2602:fe6a:301:1" + ":".join(("%x" % random.randint(0, 16**4) for i in range(4)))
+
+    primary_ip6 = nb.ipam.prefixes.get(2).available_ips.create()
+    int_id = nb.dcim.interfaces.get(device_id=id,name="MgmtEth0/0/CPU0/0")['id']
+    nb.ipam.ip-addresses.update([{'address': primary_ip6, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': int_id}])
     device_args=[console,name,primary_ip6,id]
     configure_thread = threading.Thread(target=configure, name="configure_device", args=device_args)
     configure_thread.start()
@@ -147,7 +150,6 @@ interface {{ iface }}
 
     return f"{ip} is being configured", 201
 
-# simulated "Zero Touch Provisioning"
 @application.patch("/device")
 def device_update():
     print("Oh no") # Sarcastic remark
@@ -235,6 +237,6 @@ def configure(port,hostname,ip6,id):
         tn.write(b"exit\n")
         tn.close()
 
-        nb.dcim.devices.update([{'id': id, 'status': "planned"}])
+        nb.dcim.devices.update([{'id': id, 'status': "planned", 'primary_ip6': ip6}])
 
 #def configurejunos():
