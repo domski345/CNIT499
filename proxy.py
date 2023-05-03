@@ -51,7 +51,7 @@ def device():
 
     primary_ip6 = nb.ipam.prefixes.get(2).available_ips.create() # 2 is the Mgmt prefix
     int_id = nb.dcim.interfaces.get(device_id=id,name="MgmtEth0/0/CPU0/0")['id']
-    nb.ipam.ipaddresses.update([{'address': primary_ip6, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': int_id}])
+    nb.ipam.ipaddresses.update([{'id': primary_ip6.id, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': int_id}])
     device_args=[console,name,primary_ip6,id]
     configure_thread = threading.Thread(target=configure, name="configure_device", args=device_args)
     configure_thread.start()
@@ -114,8 +114,8 @@ def cable():
     ip_b_side = prefix.available_ips.create()
 
     # push ip address changes to Netbox
-    nb.ipam.ipaddresses.update([{'address': ip_a_side, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': a_interface_id}])
-    nb.ipam.ipaddresses.update([{'address': ip_b_side, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': b_interface_id}])
+    nb.ipam.ipaddresses.update([{'id': ip_a_side.id, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': a_interface_id}])
+    nb.ipam.ipaddresses.update([{'id': ip_b_side.id, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': b_interface_id}])
 
     # configuration data for "a" side device
     data_a = {
