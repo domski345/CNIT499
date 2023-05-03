@@ -101,9 +101,65 @@ def cable():
     # Extract GNS3 assigned data
     link_id = response.json()["link_id"]
 
+    # pull management ip address from devices on cable
+    mgmt_ip_a = ipaddress.IPv6Interface(nb.dcim.devices.get(id=a_node_id)['primary_ip6']['address']).ip
+    mgmt_ip_b = ipaddress.IPv6Interface(nb.dcim.devices.get(id=b_node_id)['primary_ip6']['address']).ip 
+    # driver = nb.dcim.devices.get(id=device_id)['platform']['slug'] # Assume single vendor environment
+    driver = "iosxr"
+
+    # generate v6 prefix for link
+    prefix = nb.ipam.prefixes.get(6).available_prefixes.create({"prefix_length": 127})
+    # generate ip addresses from prefix
+    ip_a_side = prefix.available_ips.create()
+    ip_b_side = prefix.available_ips.create()
+
+    # push ip address changes to Netbox
+    nb.ipam.ipaddresses.update([{'address': ip_a_side, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': a_interface_id}])
+    nb.ipam.ipaddresses.update([{'address': ip_b_side, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': b_interface_id}])
+
+    # configuration data for "a" side device
+    data_a = {
+        "ip": ip_a_side,
+        "vrf": "mgmt",
+        "iface": cable['data']['a_terminations'][0]['object']['name']
+    } 
+
+    # configuration data for "b" side device
+    data_b = {
+        "ip": ip_b_side,
+        "vrf": "mgmt",
+        "iface": cable['data']['b_terminations'][0]['object']['name']
+    }
+
+    # configuration template
+    template = """
+interface {{ iface }}
+{% if vrf %} vrf {{ vrf }}{% endif %}
+ ipv6 address {{ ip }}
+ no shutdown
+"""
+    j2_template = Template(template)
+    device_driver = get_network_driver(driver)
+
+    # write changes to "a" side device
+    device_a = device_driver(hostname=mgmt_ip_a,username='cisco',password='cisco')
+    device_a.open()
+    device_a.load_merge_candidate(config=j2_template.render(data_a))
+    device_a.commit_config()
+    device_a.close()
+
+    # write changes to "b" side device
+    device_b = device_driver(hostname=mgmt_ip_b,username='cisco',password='cisco')
+    device_b.open()
+    device_b.load_merge_candidate(config=j2_template.render(data_b))
+    device_b.commit_config()
+    device_b.close()
+
+
     # Update netbox with the cable ID
     nb.dcim.cables.update([{'id': id, 'label': link_id}])
     return f"Cable: {link_id} was created", 201
+
 
 @application.delete("/cable")
 def cable_delete():
@@ -238,5 +294,7 @@ def configure(port,hostname,ip6,id):
         tn.close()
 
         nb.dcim.devices.update([{'id': id, 'status': "planned", 'primary_ip6': ip6}])
+
+
 
 #def configurejunos():
