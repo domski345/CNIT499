@@ -53,6 +53,7 @@ def device():
     primary_ip6 = nb.ipam.prefixes.get(2).available_ips.create() # 2 is the Mgmt prefix
     int_id = nb.dcim.interfaces.get(device_id=id,name="MgmtEth0/0/CPU0/0")['id']
     nb.ipam.ip_addresses.update([{'id': primary_ip6.id, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': int_id}])
+    nb.dcim.interfaces.update([{'id': int_id, 'vrf': 1}])
     nb.dcim.devices.update([{'id': id, 'status': "planned", 'primary_ip6': primary_ip6.id}])
     device_args=[console,name,primary_ip6,id]
     configure_thread = threading.Thread(target=configure, name="configure_device", args=device_args)
@@ -90,18 +91,24 @@ def cable():
     b_interface_id = cable['data']['b_terminations'][0]['object_id']
 
     # Get necessary data from netbox
-    a_id = nb.dcim.devices.get(id=a_node_id)['serial']
-    b_id = nb.dcim.devices.get(id=b_node_id)['serial']
-    a_label = nb.dcim.interfaces.get(id=a_interface_id)['label']
-    b_label = nb.dcim.interfaces.get(id=b_interface_id)['label']
+    device_a = nb.dcim.devices.get(id=cable['data']['a_terminations'][0]['object']['device']['id'])
+    device_b = nb.dcim.devices.get(id=cable['data']['b_terminations'][0]['object']['device']['id'])
 
     # Make API call to create the cable in GNS3
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/links"
-    data = {"nodes": [{ "node_id": a_id, "adapter_number": int(a_label), "port_number": 0 }, { "node_id": b_id, "adapter_number": int(b_label), "port_number": 0 }]}
+    data = {"nodes": [{ "node_id": device_a['serial'], "adapter_number": int(device_a['label']), "port_number": 0 }, { "node_id": device_b['serial'], "adapter_number": int(device_b['label']), "port_number": 0 }]}
     response = requests.post(api_url, json=data)
 
     # Extract GNS3 assigned data
     link_id = response.json()["link_id"]
+
+    # Control logic for determining the link type
+    if device_a['device_role']['id'] == 1:
+        # If a is a core..
+        if device_b['device_role']['id'] == 1:
+            # core to core, do is-is
+            nb.dcim.interfaces.update([{'id': a_interface_id, 'vrf': 2, 'tags': [{'id': 1}]}])
+            nb.dcim.interfaces.update([{'id': b_interface_id, 'vrf': 2, 'tags': [{'id': 1}]}])
 
     # generate v6 prefix for link
     prefix = nb.ipam.prefixes.get(6).available_prefixes.create({"prefix_length": 127})
