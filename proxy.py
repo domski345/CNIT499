@@ -103,22 +103,22 @@ def cable():
     link_id = response.json()["link_id"]
 
     # Control logic for determining the link type
-    if device_a['device_role']['id'] == 1:
+    if device_a['device_role']['id'] == 3:
         # If a is a core..
-        if device_b['device_role']['id'] == 1:
+        if device_b['device_role']['id'] == 3:
             # core to core, do is-is
             nb.dcim.interfaces.update([{'id': a_interface_id, 'vrf': 2, 'tags': [{'id': 1}]}])
             nb.dcim.interfaces.update([{'id': b_interface_id, 'vrf': 2, 'tags': [{'id': 1}]}])
 
-    # generate v6 prefix for link
-    prefix = nb.ipam.prefixes.get(6).available_prefixes.create({"prefix_length": 127})
-    # generate ip addresses from prefix
-    ip_a_side = prefix.available_ips.create()
-    ip_b_side = prefix.available_ips.create()
+            # generate v6 prefix for link
+            prefix = nb.ipam.prefixes.get(6).available_prefixes.create({"prefix_length": 127})
+            # generate ip addresses from prefix
+            ip_a_side = prefix.available_ips.create()
+            ip_b_side = prefix.available_ips.create()
 
-    # push ip address changes to Netbox
-    nb.ipam.ip_addresses.update([{'id': ip_a_side.id, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': a_interface_id}])
-    nb.ipam.ip_addresses.update([{'id': ip_b_side.id, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': b_interface_id}])
+            # push ip address changes to Netbox
+            nb.ipam.ip_addresses.update([{'id': ip_a_side.id, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': a_interface_id}])
+            nb.ipam.ip_addresses.update([{'id': ip_b_side.id, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': b_interface_id}])
 
     # Update netbox with the cable ID
     nb.dcim.cables.update([{'id': id, 'label': link_id}])
