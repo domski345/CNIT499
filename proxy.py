@@ -85,18 +85,18 @@ def cable():
     cable = request.get_json()
 
     id = cable['data']['id']
-    a_node_id = cable['data']['a_terminations'][0]['object']['device']['id']
-    b_node_id = cable['data']['b_terminations'][0]['object']['device']['id']
     a_interface_id = cable['data']['a_terminations'][0]['object_id']
     b_interface_id = cable['data']['b_terminations'][0]['object_id']
 
     # Get necessary data from netbox
     device_a = nb.dcim.devices.get(id=cable['data']['a_terminations'][0]['object']['device']['id'])
     device_b = nb.dcim.devices.get(id=cable['data']['b_terminations'][0]['object']['device']['id'])
+    interface_a = nb.dcim.interfaces.get(id=a_interface_id)
+    interface_b = nb.dcim.interfaces.get(id=b_interface_id)
 
     # Make API call to create the cable in GNS3
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/links"
-    data = {"nodes": [{ "node_id": device_a['serial'], "adapter_number": int(device_a['label']), "port_number": 0 }, { "node_id": device_b['serial'], "adapter_number": int(device_b['label']), "port_number": 0 }]}
+    data = {"nodes": [{ "node_id": device_a['serial'], "adapter_number": int(interface_a['label']), "port_number": 0 }, { "node_id": device_b['serial'], "adapter_number": int(interface_b['label']), "port_number": 0 }]}
     response = requests.post(api_url, json=data)
 
     # Extract GNS3 assigned data
