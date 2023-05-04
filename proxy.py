@@ -5,7 +5,8 @@ from napalm import get_network_driver
 from jinja2 import Template
 application = Flask(__name__)
 project_id = "3bcd7eca-5c2e-4199-8c7d-690874e6ab72"
-nb = pynetbox.api('http://netbox.brownout.tech:8000/', token='0123456789abcdef0123456789abcdef01234567')
+netbox_token = '0123456789abcdef0123456789abcdef01234567'
+nb = pynetbox.api('http://netbox.brownout.tech:8000/', token=netbox_token)
 
 
 @application.post("/device")
@@ -303,7 +304,7 @@ def configure(port,hostname,ip6,id):
         tn.write(b"exit\n")
         tn.close()
 
-        nb.dcim.devices.update([{'id': id, 'status': "planned"}])
+        nb.dcim.devices.update([{'id': id, 'status': "active"}])
 
 
 
