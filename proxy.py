@@ -220,7 +220,7 @@ def device_update():
     if update['data']['status']['value'] == 'staged':
         # POST request to render config from NetBox
         api_url = f"http://netbox.brownout.tech:8000/api/dcim/devices/{update['data']['id']}/render-config/"
-        response = requests.post(api_url, authorization=netbox_token)
+        response = requests.post(api_url, headers={'authorization' : f'Token {netbox_token}'})
         # Push config using NAPALM to device
         mgmt_ip = ipaddress.IPv6Interface(update['primary_ip6']['address']).ip
         device_driver = get_network_driver("iosxr")
@@ -228,7 +228,8 @@ def device_update():
         device.open()
         device.load_merge_candidate(config={response['content']})
         device.commit_config()
-        device.close() 
+        device.close()
+        nb.dcim.devices.update([{'id': {update['data']['id']}, 'status': "active"}]) 
     return f"{update['data']['name']} is being configured", 201
 
 # Debug
