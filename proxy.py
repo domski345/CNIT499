@@ -217,7 +217,16 @@ def device_update():
     
     update = request.get_json()
     if update['data']['status']['value'] == 'staged':
-        print("help")
+        # POST request to render config from NetBox
+
+        # Push config using NAPALM to device
+        mgmt_ip = ipaddress.IPv6Interface(update['primary_ip6']['address']).ip
+        device_driver = get_network_driver("iosxr")
+        device = device_driver(hostname=mgmt_ip,username='cisco',password='cisco')
+        device.open()
+        device.load_merge_candidate(config= #whatever is returned from request# ))
+        device.commit_config()
+        device.close() 
     return f"{update['data']['name']} is being configured", 201
 
 # Debug
