@@ -7,13 +7,17 @@ interface MgmtEth0/0/CPU0/0
  vrf Mgmt
  ipv6 address {{ device.primary_ip6.address }}
 !
-{% for interface in device.interfaces.all()|rejectattr('name', 'eq', 'MgmtEth0/0/CPU0/0') -%}
-{{ interface.name }}
- {% for ip in interface.ip_addresses.all() -%}
+{%- for interface in device.interfaces.all()|rejectattr('name', 'eq', 'MgmtEth0/0/CPU0/0') %}
+interface {{ interface.name }}
+ {%- if interface.vrf %}
+ vrf {{ interface.vrf }}
+ {%- endif %}
+ {%- for ip in interface.ip_addresses.all() %}
  ipv{{ ip.family }} address {{ ip.address }}
- {% endfor -%}
+ {%- endfor %}
 !
-{% endfor -%}router static
+{%- endfor %}
+router static
  vrf Mgmt
   address-family ipv6 unicast
    ::/0 2602:fe6a:301:1::1

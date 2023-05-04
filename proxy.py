@@ -149,7 +149,7 @@ def device_update():
         device.load_replace_candidate(config=response.json()['content'])
         device.commit_config()
         device.close()
-        nb.dcim.devices.update({'id': update['data']['id'], 'status': "active"}) 
+        nb.dcim.devices.update([{'id': update['data']['id'], 'status': "active"}])
     return f"{update['data']['name']} is being configured", 201
 
 # Debug
