@@ -95,19 +95,13 @@ def cable():
     a_label = nb.dcim.interfaces.get(id=a_interface_id)['label']
     b_label = nb.dcim.interfaces.get(id=b_interface_id)['label']
 
-    # Make API call to update the VM's name in GNS3
+    # Make API call to create the cable in GNS3
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/links"
     data = {"nodes": [{ "node_id": a_id, "adapter_number": int(a_label), "port_number": 0 }, { "node_id": b_id, "adapter_number": int(b_label), "port_number": 0 }]}
     response = requests.post(api_url, json=data)
 
     # Extract GNS3 assigned data
     link_id = response.json()["link_id"]
-
-    # pull management ip address from devices on cable
-    mgmt_ip_a = ipaddress.IPv6Interface(nb.dcim.devices.get(id=a_node_id)['primary_ip6']['address']).ip
-    mgmt_ip_b = ipaddress.IPv6Interface(nb.dcim.devices.get(id=b_node_id)['primary_ip6']['address']).ip 
-    # driver = nb.dcim.devices.get(id=device_id)['platform']['slug'] # Assume single vendor environment
-    driver = "iosxr"
 
     # generate v6 prefix for link
     prefix = nb.ipam.prefixes.get(6).available_prefixes.create({"prefix_length": 127})
@@ -116,47 +110,8 @@ def cable():
     ip_b_side = prefix.available_ips.create()
 
     # push ip address changes to Netbox
-    nb.ipam.ip_addresses.update([{'id': ip_a_side.id, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': a_interface_id}])
-    nb.ipam.ip_addresses.update([{'id': ip_b_side.id, 'vrf': 1, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': b_interface_id}])
-
-    # configuration data for "a" side device
-    data_a = {
-        "ip": ip_a_side,
-        "vrf": "mgmt",
-        "iface": cable['data']['a_terminations'][0]['object']['name']
-    } 
-
-    # configuration data for "b" side device
-    data_b = {
-        "ip": ip_b_side,
-        "vrf": "mgmt",
-        "iface": cable['data']['b_terminations'][0]['object']['name']
-    }
-
-    # configuration template
-    template = """
-interface {{ iface }}
-{% if vrf %} vrf {{ vrf }}{% endif %}
- ipv6 address {{ ip }}
- no shutdown
-"""
-    j2_template = Template(template)
-    device_driver = get_network_driver(driver)
-
-    # write changes to "a" side device
-    device_a = device_driver(hostname=mgmt_ip_a,username='cisco',password='cisco')
-    device_a.open()
-    device_a.load_merge_candidate(config=j2_template.render(data_a))
-    device_a.commit_config()
-    device_a.close()
-
-    # write changes to "b" side device
-    device_b = device_driver(hostname=mgmt_ip_b,username='cisco',password='cisco')
-    device_b.open()
-    device_b.load_merge_candidate(config=j2_template.render(data_b))
-    device_b.commit_config()
-    device_b.close()
-
+    nb.ipam.ip_addresses.update([{'id': ip_a_side.id, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': a_interface_id}])
+    nb.ipam.ip_addresses.update([{'id': ip_b_side.id, 'assigned_object_type': 'dcim.interface', 'assigned_object_id': b_interface_id}])
 
     # Update netbox with the cable ID
     nb.dcim.cables.update([{'id': id, 'label': link_id}])
@@ -172,41 +127,6 @@ def cable_delete():
     api_url = f"http://gns3.brownout.tech:3080/v2/projects/{project_id}/links/{link_id}"
     requests.delete(api_url)
     return f"{link_id} was deleted", 201
-
-# IP address config
-@application.post("/ip")
-def ip():
-    print("Yo Dawg, I heard you like IP addresses?") # Sarcastic remark
-
-    #Error checking
-    if not request.is_json:
-        return {"error": "Request must be JSON"}, 415
-    
-    conf = request.get_json()
-    device_id = conf['data']['assigned_object']['device']['id'],
-    mgmt_ip = ipaddress.IPv6Interface(nb.dcim.devices.get(id=device_id)['primary_ip6']['address']).ip
-    driver = nb.dcim.devices.get(id=device_id)['platform']['slug']
-    data = {
-        "ip": conf['data']['address'],
-        "vrf": conf['data']['vrf']['name'],
-        "family": conf['data']['family']['value'],
-        "iface": conf['data']['assigned_object']['name']
-    } 
-    template = """
-interface {{ iface }}
-{% if vrf %} vrf {{ vrf }}{% endif %}
- ipv{{ family }} address {{ ip }}
- no shutdown
-"""
-    j2_template = Template(template)
-    device_driver = get_network_driver(driver)
-    device = device_driver(hostname=mgmt_ip,username='cisco',password='cisco')
-    device.open()
-    device.load_merge_candidate(config=j2_template.render(data))
-    device.commit_config()
-    device.close()
-
-    return f"{ip} is being configured", 201
 
 @application.patch("/device")
 def device_update():
@@ -229,7 +149,7 @@ def device_update():
         device.load_replace_candidate(config=response.json()['content'])
         device.commit_config()
         device.close()
-        nb.dcim.devices.update([{'id': {update['data']['id']}, 'status': "active"}]) 
+        nb.dcim.devices.update({'id': update['data']['id'], 'status': "active"}) 
     return f"{update['data']['name']} is being configured", 201
 
 # Debug
@@ -305,9 +225,4 @@ def configure(port,hostname,ip6,id):
         tn.read_until(b"#")
         tn.write(b"exit\n")
         tn.close()
-
         nb.dcim.devices.update([{'id': id, 'status': "active"}])
-
-
-
-#def configurejunos():
