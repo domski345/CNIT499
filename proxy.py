@@ -226,7 +226,7 @@ def device_update():
         device_driver = get_network_driver("iosxr")
         device = device_driver(hostname=mgmt_ip,username='cisco',password='cisco')
         device.open()
-        device.load_merge_candidate(config={response['content']})
+        device.load_merge_candidate(config={response.json()['content']})
         device.commit_config()
         device.close()
         nb.dcim.devices.update([{'id': {update['data']['id']}, 'status': "active"}]) 
