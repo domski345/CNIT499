@@ -1,48 +1,20 @@
-hostname test-xr-01
+hostname {{ device.name }}
 vrf Mgmt
- address-family ipv4 unicast
- !
  address-family ipv6 unicast
  !
 !
 interface MgmtEth0/0/CPU0/0
  vrf Mgmt
- ipv4 address 10.96.4.2 255.255.252.0
- ipv6 address 2602:fe6a:301:1::2/64
+ ipv6 address {{ device.primary_ip6.address }}
 !
-interface GigabitEthernet0/0/0/0
- shutdown
+{% for interface in device.interfaces.all()|rejectattr('name', 'eq', 'MgmtEth0/0/CPU0/0') -%}
+{{ interface.name }}
+ {% for ip in interface.ip_addresses.all() -%}
+ ipv{{ ip.family }} address {{ ip.address }}
+ {% endfor -%}
 !
-interface GigabitEthernet0/0/0/1
- shutdown
-!
-interface GigabitEthernet0/0/0/2
- shutdown
-!
-interface GigabitEthernet0/0/0/3
- shutdown
-!
-interface GigabitEthernet0/0/0/4
- vrf mgmt
- ipv6 address 2602:fe6a:302:1::c/127
-!
-interface GigabitEthernet0/0/0/5
- vrf mgmt
- ipv6 address 2602:fe6a:302:1::e/127
-!
-interface GigabitEthernet0/0/0/6
- vrf mgmt
- ipv6 address 2602:fe6a:302:1::10/127
-!
-interface GigabitEthernet0/0/0/7
- vrf mgmt
- ipv6 address 2602:fe6a:302:1::12/127
-!
-router static
+{% endfor -%}router static
  vrf Mgmt
-  address-family ipv4 unicast
-   0.0.0.0/0 10.96.4.1
-  !
   address-family ipv6 unicast
    ::/0 2602:fe6a:301:1::1
   !
