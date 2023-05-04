@@ -222,7 +222,7 @@ def device_update():
         api_url = f"http://netbox.brownout.tech:8000/api/dcim/devices/{update['data']['id']}/render-config/"
         response = requests.post(api_url, headers={'authorization' : f'Token {netbox_token}'})
         # Push config using NAPALM to device
-        mgmt_ip = ipaddress.IPv6Interface(update['primary_ip6']['address']).ip
+        mgmt_ip = ipaddress.IPv6Interface(update['data']['primary_ip6']['address']).ip
         device_driver = get_network_driver("iosxr")
         device = device_driver(hostname=mgmt_ip,username='cisco',password='cisco')
         device.open()
