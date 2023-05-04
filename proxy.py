@@ -219,13 +219,14 @@ def device_update():
     update = request.get_json()
     if update['data']['status']['value'] == 'staged':
         # POST request to render config from NetBox
-
+        api_url = f"http://netbox.brownout.tech:8000/api/dcim/devices/{update['data']['id']}/render-config/"
+        response = requests.post(api_url, authorization=netbox_token)
         # Push config using NAPALM to device
         mgmt_ip = ipaddress.IPv6Interface(update['primary_ip6']['address']).ip
         device_driver = get_network_driver("iosxr")
         device = device_driver(hostname=mgmt_ip,username='cisco',password='cisco')
         device.open()
-        device.load_merge_candidate(config= #whatever is returned from request# ))
+        device.load_merge_candidate(config={response['content']})
         device.commit_config()
         device.close() 
     return f"{update['data']['name']} is being configured", 201
